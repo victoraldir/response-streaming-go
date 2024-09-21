@@ -113,9 +113,9 @@ Outputs:
     Value: !Sub 
       - ${Url}
       - Url: !Join [ '', !Split [ '/', !Join [ '', !Split [ 'https://', !GetAtt StreamingFunctionUrl.FunctionUrl ] ] ] ]
-  RefFunction:
-    Description: Streaming Lambda Function Ref
-    Value: !Ref StreamingFunction
+  CloudFrontDistribution:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName
 # # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:

@@ -24,7 +24,7 @@ tasks:
   deploy:
     deps: [sam-build]
     cmds:
-      - sam deploy --guided
+      - sam deploy
   
   destroy:
     cmds:
