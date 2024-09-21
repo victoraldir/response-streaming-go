@@ -1,0 +1,31 @@
+version: '3'
+
+tasks:
+  build:
+    dir: mp4tostream
+    cmds:
+      - go build -o bin/bootstrap main.go
+  
+  test:
+    dir: mp4tostream
+    cmds:
+      - go test ./...
+  
+  tidy:
+    dir: mp4tostream
+    cmds:
+      - go mod tidy
+  
+  sam-build:
+    cmds:
+      - sam build
+
+  # Build before deploying
+  deploy:
+    deps: [sam-build]
+    cmds:
+      - sam deploy --guided
+  
+  destroy:
+    cmds:
+      - sam delete

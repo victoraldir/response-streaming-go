@@ -1,10 +1,10 @@
-module hello
+module mp4tostream
 
-go 1.20
+go 1.23
 
 require (
-	github.com/aws/aws-lambda-go v1.40.0
-	github.com/stretchr/testify v1.7.2
+	github.com/aws/aws-lambda-go v1.47.0
+	github.com/stretchr/testify v1.9.0
 )
 
 require (

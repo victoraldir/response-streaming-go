@@ -3,7 +3,7 @@
 
 This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model (AWS SAM) command line interface (CLI). It includes the following files and folders:
 
-- `hello` - Code for the application's Lambda function.
+- `mp4tostream` - Code for the application's Lambda function.
 - `template.yaml` - A template that defines the application's AWS resources.
 
 Resources for this project are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.

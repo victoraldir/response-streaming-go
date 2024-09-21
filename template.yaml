@@ -8,7 +8,7 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
-      CodeUri: hello/
+      CodeUri: mp4tostream/
       Handler: bootstrap
       Runtime: provided.al2023
       Architectures:
@@ -17,6 +17,24 @@ Resources:
       FunctionUrlConfig:
         AuthType: AWS_IAM
         InvokeMode: RESPONSE_STREAM
+  
+  StreamingFunctionPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunctionUrl'
+      FunctionName: !GetAtt StreamingFunction.Arn
+      Principal: 'cloudfront.amazonaws.com'
+      SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+
+  OriginAccessControl:
+    Type: 'AWS::CloudFront::OriginAccessControl'
+    Properties:
+      OriginAccessControlConfig:
+        Description: 'Origin Access Control for Streaming Lambda'
+        Name: !Sub '${AWS::StackName}-OriginAccessControl'
+        OriginAccessControlOriginType: 'lambda'
+        SigningBehavior: 'always'
+        SigningProtocol: 'sigv4'
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -32,29 +50,57 @@ Resources:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: 'true'
 
-  # Configure cloudfront distribution
+  CustomCachePolicy:
+    Type: 'AWS::CloudFront::CachePolicy'
+    Properties:
+      CachePolicyConfig:
+        Name: 'CustomCachePolicyWithQueryString'
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingBrotli: false
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: 'none'
+          CookiesConfig:
+            CookieBehavior: 'none'
+          QueryStringsConfig:
+            QueryStringBehavior: 'whitelist'
+            QueryStrings:
+              - 'url'
+  
   CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
+    Type: 'AWS::CloudFront::Distribution'
     Properties:
       DistributionConfig:
+        Enabled: true
         Origins:
-          - DomainName: !GetAtt StreamingFunctionUrl.FunctionUrl
-            Id: !Ref StreamingFunction
+          - DomainName: !Sub
+              - ${Url}
+              - Url: !Join [ '', !Split [ '/', !Join [ '', !Split [ 'https://', !GetAtt StreamingFunctionUrl.FunctionUrl ] ] ] ] # Remove https:// and / at the end
+            Id: 'lambdaOrigin'
             CustomOriginConfig:
               HTTPSPort: 443
-              OriginProtocolPolicy: https-only
-        Enabled: true
+              OriginProtocolPolicy: 'https-only'
+              OriginKeepaliveTimeout: 5
+              OriginReadTimeout: 30
+              OriginSSLProtocols:
+                - TLSv1.2
+            OriginAccessControlId: !Ref OriginAccessControl
         DefaultCacheBehavior:
+          Compress: true
           AllowedMethods:
+            - HEAD
             - GET
-          TargetOriginId: !Ref StreamingFunction
-          ViewerProtocolPolicy: redirect-to-https
-          ForwardedValues:
-            QueryString: true
-        DefaultRootObject: index.html
-        PriceClass: PriceClass_100
+          CachedMethods:
+            - HEAD
+            - GET
+          TargetOriginId: 'lambdaOrigin'
+          ViewerProtocolPolicy: 'redirect-to-https'
+          CachePolicyId: !Ref CustomCachePolicy
+        PriceClass: 'PriceClass_100'
 
-  
 Outputs:
   StreamingFunction:
     Description: Streaming Lambda Function ARN
@@ -62,6 +108,14 @@ Outputs:
   StreamingFunctionURL:
     Description: Streaming Lambda Function URL
     Value: !GetAtt StreamingFunctionUrl.FunctionUrl
+  UrlWithoutProtocol:
+    Description: Streaming Lambda Function URL without protocol and / at the end
+    Value: !Sub 
+      - ${Url}
+      - Url: !Join [ '', !Split [ '/', !Join [ '', !Split [ 'https://', !GetAtt StreamingFunctionUrl.FunctionUrl ] ] ] ]
+  RefFunction:
+    Description: Streaming Lambda Function Ref
+    Value: !Ref StreamingFunction
 # # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
