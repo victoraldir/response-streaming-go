@@ -29,3 +29,12 @@ tasks:
   destroy:
     cmds:
       - sam delete
+  
+  build-layer-bin-ffmpeg:
+    dir: build/layer
+    cmds:
+      - curl -sL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz | tar xJ --strip-components=1 -C .
+      - mv ffmpeg bin/ffmpeg
+      - mv ffprobe bin/ffprobe
+      - chmod +x bin/ffmpeg
+      - chmod +x bin/ffprobe
