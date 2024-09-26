@@ -18,6 +18,34 @@ Resources:
         AuthType: AWS_IAM
         InvokeMode: RESPONSE_STREAM
   
+  TranscodeFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: m3u8tostream/
+      Handler: bootstrap
+      Runtime: provided.al2023
+      Architectures:
+      - arm64
+      Timeout: 10
+      Layers:
+        - !Ref LambdaLayer
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+  
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ffmpeg-lambda-layer
+      Description: FFmpeg for AWS Lambda
+      ContentUri: build/layer
+      CompatibleRuntimes:
+        - go1.x
+      LicenseInfo: GPL-3.0-or-later
+      RetentionPolicy: Retain
+  
   StreamingFunctionPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
