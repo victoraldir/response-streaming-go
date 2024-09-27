@@ -25,10 +25,11 @@ Resources:
     Properties:
       CodeUri: m3u8tostream/
       Handler: bootstrap
-      Runtime: provided.al2023
+      Runtime: provided.al2
+      MemorySize: 256
       Architectures:
       - arm64
-      Timeout: 10
+      Timeout: 15
       Layers:
         - !Ref LambdaLayer
       FunctionUrlConfig:
@@ -40,7 +41,7 @@ Resources:
     Properties:
       LayerName: ffmpeg-lambda-layer
       Description: FFmpeg for AWS Lambda
-      ContentUri: build/layer
+      ContentUri: build/layer.zip
       CompatibleRuntimes:
         - go1.x
       LicenseInfo: GPL-3.0-or-later

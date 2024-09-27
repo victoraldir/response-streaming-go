@@ -1,10 +1,10 @@
 version: '3'
 
 tasks:
-  build:
-    dir: mp4tostream
-    cmds:
-      - go build -o bin/bootstrap main.go
+  # build-mp4:
+  #   dir: mp4tostream
+  #   cmds:
+  #     - go build -o bootstrap main.go
   
   test:
     dir: mp4tostream
@@ -16,7 +16,13 @@ tasks:
     cmds:
       - go mod tidy
   
+  # build-m3u8:
+  #   dir: m3u8tostream
+  #   cmds:
+  #     - go build -o bootstrap main.go
+
   sam-build:
+    deps: [build-layer-bin-ffmpeg]
     cmds:
       - sam build
 
@@ -33,8 +39,17 @@ tasks:
   build-layer-bin-ffmpeg:
     dir: build/layer
     cmds:
-      - curl -sL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz | tar xJ --strip-components=1 -C .
-      - mv ffmpeg bin/ffmpeg
-      - mv ffprobe bin/ffprobe
-      - chmod +x bin/ffmpeg
-      - chmod +x bin/ffprobe
+      - mkdir -p bin
+      - curl -L https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-4.4.1-arm64-static.tar.xz -o ffmpeg-release-i686-static.tar.xz
+      - tar -xJf ffmpeg-release-i686-static.tar.xz --strip-components=1 -C bin
+      - mv bin/ffmpeg* bin/ffmpeg
+      - mv bin/ffprobe* bin/ffprobe
+      - rm ffmpeg-release-i686-static.tar.xz
+      - chmod +x bin/ffmpeg bin/ffprobe
+      - zip -r9 ../layer.zip .
+    sources:
+      - bin/ffmpeg
+      - bin/ffprobe
+    generates:
+      - ../layer.zip
+      
